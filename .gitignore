@@ -1,0 +1,8 @@
+target/
+dbt_packages/
+logs/
+dbt_modules/
+.env
+*.json
+.DS_Store
+dbt_internal_packages/
