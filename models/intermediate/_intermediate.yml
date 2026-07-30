@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: int_sessions
+    description: >
+      One row per GA4 session, containing session attributes,
+      engagement measures, ecommerce funnel flags, timestamps,
+      transactions, and revenue.
+
+    columns:
+      - name: session_id
+        description: Unique identifier for a GA4 user session.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: user_pseudo_id
+        description: Anonymous identifier of the user.
+        data_tests:
+          - not_null
+
+      - name: session_date
+        description: Calendar date on which the session began.
+        data_tests:
+          - not_null
+
+      - name: session_start_at
+        description: Timestamp of the first observed event in the session.
+        data_tests:
+          - not_null
+
+      - name: session_end_at
+        description: Timestamp of the last observed event in the session.
+        data_tests:
+          - not_null
+
+      - name: session_duration_seconds
+        description: >
+          Seconds between the first and last observed event
+          in the session.
+        data_tests:
+          - not_null
+
+      - name: event_count
+        description: Number of GA4 events recorded during the session.
+        data_tests:
+          - not_null
+
+      - name: purchased
+        description: True when the session contains a purchase event.
+        data_tests:
+          - not_null
+
+      - name: transactions
+        description: Number of distinct transaction IDs in the session.
+        data_tests:
+          - not_null
+
+      - name: revenue_usd
+        description: Deduplicated purchase revenue associated with the session.
+        data_tests:
+          - not_null

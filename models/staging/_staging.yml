@@ -3,24 +3,58 @@ version: 2
 models:
   - name: stg_ga4_events
     description: >
-      Staging view for the public GA4 ecommerce event dataset.
-      This initial version standardizes event dates and timestamps.
+      One row per GA4 event from Google's public obfuscated ecommerce
+      sample. Nested event parameters are flattened for downstream
+      session, funnel, customer, and transaction modeling.
 
     columns:
       - name: event_date
-        description: Calendar date on which the GA4 event occurred.
+        description: Calendar date associated with the GA4 event.
         data_tests:
           - not_null
 
       - name: event_timestamp
-        description: Timestamp at which the GA4 event occurred.
+        description: Timestamp at which the event occurred.
         data_tests:
           - not_null
 
       - name: event_name
-        description: Name of the GA4 event.
+        description: Name of the recorded GA4 event.
         data_tests:
           - not_null
 
       - name: user_pseudo_id
-        description: Anonymous GA4 user identifier.
+        description: Anonymous GA4 identifier assigned to the user.
+
+      - name: ga_session_id
+        description: GA4 session identifier extracted from event parameters.
+
+      - name: session_id
+        description: >
+          Session identifier created by combining user_pseudo_id
+          and ga_session_id.
+
+      - name: platform
+        description: Platform from which the event originated.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - WEB
+                  - IOS
+                  - ANDROID
+
+      - name: device_category
+        description: Device category such as desktop, mobile, or tablet.
+
+      - name: first_user_source
+        description: Source through which the user was first acquired.
+
+      - name: first_user_medium
+        description: Medium through which the user was first acquired.
+
+      - name: transaction_id
+        description: Ecommerce transaction identifier when available.
+
+      - name: purchase_revenue_usd
+        description: Purchase-event revenue represented in US dollars.
