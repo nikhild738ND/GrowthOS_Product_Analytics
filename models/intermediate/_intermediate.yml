@@ -182,3 +182,129 @@ models:
                   - Dropped after cart
                   - Dropped after product view
                   - No product view
+
+  - name: int_orders
+    description: >
+      One row per ecommerce transaction. Repeated purchase-event
+      records are consolidated using transaction_id, while
+      transaction-level revenue and quality flags are retained.
+
+    columns:
+      - name: transaction_id
+        description: Unique ecommerce transaction identifier.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: order_date
+        description: Calendar date of the earliest purchase event.
+        data_tests:
+          - not_null
+
+      - name: purchased_at
+        description: Timestamp of the earliest purchase event.
+        data_tests:
+          - not_null
+
+      - name: session_id
+        description: Session associated with the earliest purchase event.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('int_sessions')
+                field: session_id
+
+      - name: order_revenue_usd
+        description: Consolidated purchase-event revenue in US dollars.
+        data_tests:
+          - not_null
+
+      - name: order_item_quantity
+        description: Total quantity reported on the purchase event.
+        data_tests:
+          - not_null
+
+      - name: source_purchase_event_count
+        description: >
+          Number of source purchase-event records sharing
+          the transaction ID.
+        data_tests:
+          - not_null
+
+      - name: has_duplicate_purchase_event
+        description: >
+          True when multiple purchase-event records share
+          the transaction ID.
+        data_tests:
+          - not_null
+
+      - name: spans_multiple_sessions
+        description: >
+          True when a transaction ID appears across more
+          than one session.
+        data_tests:
+          - not_null
+
+      - name: has_missing_order_revenue
+        description: >
+          True when all source purchase events have missing revenue.
+        data_tests:
+          - not_null
+        
+  - name: int_order_items
+    description: >
+      One row per product line in the canonical purchase event
+      associated with an ecommerce transaction.
+
+    columns:
+      - name: order_item_id
+        description: Unique identifier for a purchased product line.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: transaction_id
+        description: Transaction to which the item belongs.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_orders')
+                field: transaction_id
+
+      - name: product_key
+        description: >
+          Product grouping key based on item ID, or item name
+          and variant when the item ID is missing.
+        data_tests:
+          - not_null
+
+      - name: item_position
+        description: Position of the item in the purchase items array.
+        data_tests:
+          - not_null
+
+      - name: quantity
+        description: Purchased quantity of the product.
+        data_tests:
+          - not_null
+
+      - name: line_revenue_usd
+        description: >
+          Item revenue in USD, with price multiplied by quantity
+          used as a fallback when necessary.
+        data_tests:
+          - not_null
+
+      - name: used_calculated_line_value
+        description: >
+          True when price multiplied by quantity was used because
+          item revenue was unavailable.
+        data_tests:
+          - not_null
+
+      - name: has_missing_line_value
+        description: >
+          True when neither item revenue nor item price was available.
+        data_tests:
+          - not_null
