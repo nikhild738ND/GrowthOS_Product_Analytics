@@ -1,0 +1,223 @@
+version: 2
+
+models:
+  - name: mart_executive_daily
+    description: >
+      One row per calendar date containing executive ecommerce,
+      session, funnel, order, revenue, and engagement metrics.
+
+    columns:
+      - name: executive_daily_id
+        description: Unique string identifier for the date.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: metric_date
+        description: Calendar date represented by the row.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: total_sessions
+        description: Number of GA4 sessions on the date.
+        data_tests:
+          - not_null
+
+      - name: daily_active_users
+        description: >
+          Distinct anonymous users observed on the date.
+          This metric is not additive across dates.
+        data_tests:
+          - not_null
+
+      - name: order_count
+        description: Number of unique transactions on the date.
+        data_tests:
+          - not_null
+
+      - name: revenue_usd
+        description: Consolidated transaction revenue in US dollars.
+        data_tests:
+          - not_null
+
+      - name: observed_session_conversion_rate
+        description: >
+          Sessions containing a purchase divided by total sessions.
+
+      - name: sequential_completion_rate
+        description: >
+          Sessions completing the ordered funnel divided by total sessions.
+
+      - name: average_order_value_usd
+        description: Revenue divided by unique transactions.
+
+      - name: revenue_per_session_usd
+        description: Revenue divided by total sessions.
+
+  - name: mart_funnel_daily
+    description: >
+      Daily observed and sequential ecommerce funnel stages
+      in long format for Tableau visualization.
+
+    columns:
+      - name: funnel_daily_id
+        description: Unique identifier for date, funnel type, and stage.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: metric_date
+        description: Calendar date represented by the funnel row.
+        data_tests:
+          - not_null
+
+      - name: funnel_type
+        description: Observed or sequential funnel.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Observed
+                  - Sequential
+
+      - name: stage_number
+        description: Funnel stage number from one through four.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4]
+                quote: false
+
+      - name: stage_sessions
+        description: Number of sessions reaching the stage.
+        data_tests:
+          - not_null
+
+      - name: stage_conversion_rate
+        description: >
+          Stage sessions divided by sessions at the previous stage.
+
+      - name: has_stage_increase
+        description: >
+          True when a later stage has more sessions than its previous stage.
+        data_tests:
+          - not_null
+
+  - name: mart_funnel_segment
+    description: >
+      Daily session, funnel, order, and revenue performance grouped
+      by device, user type, country, first-user source, and medium.
+
+    columns:
+      - name: funnel_segment_id
+        description: Unique identifier for the date and segment combination.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: metric_date
+        description: Calendar date represented by the row.
+        data_tests:
+          - not_null
+
+      - name: device_category
+        description: Device category or Unknown.
+        data_tests:
+          - not_null
+
+      - name: user_type
+        description: New, returning or other, or unknown session group.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - New user session
+                  - Returning or other session
+                  - Unknown
+
+      - name: country
+        description: Country associated with the session or order.
+        data_tests:
+          - not_null
+
+      - name: first_user_source
+        description: Source through which the user was first acquired.
+        data_tests:
+          - not_null
+
+      - name: first_user_medium
+        description: Medium through which the user was first acquired.
+        data_tests:
+          - not_null
+
+      - name: total_sessions
+        description: Number of sessions in the segment.
+        data_tests:
+          - not_null
+
+      - name: order_count
+        description: Number of unique transactions in the segment.
+        data_tests:
+          - not_null
+
+      - name: revenue_usd
+        description: Transaction revenue assigned to the segment.
+        data_tests:
+          - not_null
+
+  - name: mart_product_performance
+    description: >
+      Daily product engagement, order, unit, and revenue performance
+      used for Tableau product analysis.
+
+    columns:
+      - name: product_daily_id
+        description: Unique identifier for date and product.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: metric_date
+        description: Calendar date represented by the row.
+        data_tests:
+          - not_null
+
+      - name: product_key
+        description: Standardized identifier used to group the product.
+        data_tests:
+          - not_null
+
+      - name: view_item_sessions
+        description: Sessions containing a product-view event for the product.
+        data_tests:
+          - not_null
+
+      - name: add_to_cart_sessions
+        description: Sessions containing an add-to-cart event for the product.
+        data_tests:
+          - not_null
+
+      - name: order_count
+        description: Unique transactions containing the product.
+        data_tests:
+          - not_null
+
+      - name: units_purchased
+        description: Total quantity purchased.
+        data_tests:
+          - not_null
+
+      - name: product_revenue_usd
+        description: Canonical purchased-item revenue for the product.
+        data_tests:
+          - not_null
+
+      - name: same_day_order_rate_over_one
+        description: >
+          True when same-day orders exceed observed product-view sessions.
+        data_tests:
+          - not_null
