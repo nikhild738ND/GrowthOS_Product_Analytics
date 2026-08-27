@@ -308,3 +308,68 @@ models:
           True when neither item revenue nor item price was available.
         data_tests:
           - not_null
+
+  - name: int_users
+    description: >
+      One row per anonymous GA4 user. Combines session behavior,
+      transaction activity, purchase timing, revenue, and
+      repeat-purchase classification.
+
+    columns:
+      - name: anonymous_user_key
+        description: Hashed identifier for the anonymous GA4 user.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: user_pseudo_id
+        description: Source GA4 pseudonymous user identifier.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: first_seen_date
+        description: First observed session date for the user.
+        data_tests:
+          - not_null
+
+      - name: last_seen_date
+        description: Last observed session date for the user.
+        data_tests:
+          - not_null
+
+      - name: session_count
+        description: Total sessions associated with the user.
+        data_tests:
+          - not_null
+
+      - name: order_count
+        description: Total deduplicated orders associated with the user.
+        data_tests:
+          - not_null
+
+      - name: lifetime_revenue_usd
+        description: Total transaction revenue associated with the user.
+        data_tests:
+          - not_null
+
+      - name: has_purchased
+        description: True when the user has at least one order.
+        data_tests:
+          - not_null
+
+      - name: is_repeat_purchaser
+        description: True when the user has two or more orders.
+        data_tests:
+          - not_null
+
+      - name: customer_status
+        description: Non-purchaser, one-time purchaser, or repeat purchaser.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Non-purchaser
+                  - One-time purchaser
+                  - Repeat purchaser          
