@@ -221,3 +221,133 @@ models:
           True when same-day orders exceed observed product-view sessions.
         data_tests:
           - not_null
+
+  - name: mart_customer_summary
+    description: >
+      One row per anonymous GA4 user containing session activity,
+      purchase status, repeat-purchase classification, and revenue.
+
+    columns:
+      - name: anonymous_user_key
+        description: Hashed anonymous-user identifier.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: first_seen_date
+        description: First observed session date.
+        data_tests:
+          - not_null
+
+      - name: session_count
+        description: Total sessions associated with the anonymous user.
+        data_tests:
+          - not_null
+
+      - name: order_count
+        description: Total deduplicated orders associated with the user.
+        data_tests:
+          - not_null
+
+      - name: lifetime_revenue_usd
+        description: Total transaction revenue associated with the user.
+        data_tests:
+          - not_null
+
+      - name: customer_status
+        description: Purchase-status classification.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Non-purchaser
+                  - One-time purchaser
+                  - Repeat purchaser
+
+  - name: mart_customer_cohorts
+    description: >
+      Weekly anonymous-user retention by first-seen cohort,
+      first device, first-user source, and first-user medium.
+
+    columns:
+      - name: customer_cohort_id
+        description: Unique cohort, segment, and cohort-age identifier.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: cohort_week
+        description: Monday of the user's first observed activity week.
+        data_tests:
+          - not_null
+
+      - name: activity_week
+        description: Monday of the measured activity week.
+        data_tests:
+          - not_null
+
+      - name: cohort_age_weeks
+        description: Number of weeks since the first observed week.
+        data_tests:
+          - not_null
+
+      - name: cohort_size
+        description: Number of users originally assigned to the cohort.
+        data_tests:
+          - not_null
+
+      - name: active_users
+        description: Cohort users active during the measured week.
+        data_tests:
+          - not_null
+
+      - name: retention_rate
+        description: Active cohort users divided by original cohort size.
+        data_tests:
+          - not_null
+
+  - name: mart_product_opportunity
+    description: >
+      One row per product containing engagement, orders, revenue,
+      category benchmarks, tracking flags, and modeled opportunity.
+
+    columns:
+      - name: product_opportunity_id
+        description: Unique identifier for the product-opportunity row.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: product_key
+        description: Standardized product identifier.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: view_item_sessions
+        description: Product-view sessions across the analysis period.
+        data_tests:
+          - not_null
+
+      - name: order_count
+        description: Orders containing the product.
+        data_tests:
+          - not_null
+
+      - name: product_revenue_usd
+        description: Revenue associated with canonical purchased item rows.
+        data_tests:
+          - not_null
+
+      - name: opportunity_status
+        description: Product's experiment or tracking-review classification.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - No observed product views
+                  - Tracking review needed
+                  - Experiment candidate
+                  - At or above category benchmark
