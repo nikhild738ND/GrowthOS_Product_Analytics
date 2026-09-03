@@ -1,0 +1,375 @@
+version: 2
+
+models:
+  - name: int_sessions
+    description: >
+      One row per GA4 session, containing session attributes,
+      engagement measures, ecommerce funnel flags, timestamps,
+      transactions, and revenue.
+
+    columns:
+      - name: session_id
+        description: Unique identifier for a GA4 user session.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: user_pseudo_id
+        description: Anonymous identifier of the user.
+        data_tests:
+          - not_null
+
+      - name: session_date
+        description: Calendar date on which the session began.
+        data_tests:
+          - not_null
+
+      - name: session_start_at
+        description: Timestamp of the first observed event in the session.
+        data_tests:
+          - not_null
+
+      - name: session_end_at
+        description: Timestamp of the last observed event in the session.
+        data_tests:
+          - not_null
+
+      - name: session_duration_seconds
+        description: >
+          Seconds between the first and last observed event
+          in the session.
+        data_tests:
+          - not_null
+
+      - name: event_count
+        description: Number of GA4 events recorded during the session.
+        data_tests:
+          - not_null
+
+      - name: purchased
+        description: True when the session contains a purchase event.
+        data_tests:
+          - not_null
+
+      - name: transactions
+        description: Number of distinct transaction IDs in the session.
+        data_tests:
+          - not_null
+
+      - name: revenue_usd
+        description: Deduplicated purchase revenue associated with the session.
+        data_tests:
+          - not_null
+
+  - name: int_session_funnel
+    description: >
+      One row per GA4 session, comparing observed ecommerce events
+      with an ordered funnel of product view, add to cart,
+      begin checkout, and purchase.
+
+    columns:
+      - name: session_id
+        description: Unique identifier for the GA4 session.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_sessions')
+                field: session_id
+
+      - name: sequential_view_item_at
+        description: Timestamp of the first valid product view in the session.
+
+      - name: sequential_add_to_cart_at
+        description: >
+          Timestamp of the first add-to-cart event occurring at or after
+          the selected product-view event.
+
+      - name: sequential_begin_checkout_at
+        description: >
+          Timestamp of the first checkout event occurring at or after
+          the selected add-to-cart event.
+
+      - name: sequential_purchase_at
+        description: >
+          Timestamp of the first purchase event occurring at or after
+          the selected checkout event.
+
+      - name: sequential_viewed_item
+        description: >
+          True when the session contains a product-view event
+          that begins the ordered funnel.
+        data_tests:
+          - not_null
+
+      - name: sequential_added_to_cart
+        description: >
+          True when an add-to-cart event occurred at or after
+          the selected product-view event.
+        data_tests:
+          - not_null
+
+      - name: sequential_began_checkout
+        description: >
+          True when a checkout event occurred at or after
+          the selected add-to-cart event.
+        data_tests:
+          - not_null
+
+      - name: sequential_purchased
+        description: >
+          True when a purchase occurred at or after
+          the selected checkout event.
+        data_tests:
+          - not_null
+
+      - name: completed_sequential_funnel
+        description: >
+          True when the session completed product view,
+          add to cart, checkout, and purchase in order.
+        data_tests:
+          - not_null
+
+      - name: has_funnel_order_gap
+        description: >
+          True when later-stage events were observed but could not
+          be connected into the required ordered funnel.
+        data_tests:
+          - not_null
+
+      - name: has_same_timestamp_transition
+        description: >
+          True when at least two adjacent funnel stages have
+          the same exported event timestamp.
+        data_tests:
+          - not_null
+
+      - name: deepest_sequential_stage_number
+        description: >
+          Farthest ordered funnel stage reached, from zero through four.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4]
+                quote: false
+
+      - name: deepest_sequential_stage
+        description: Human-readable name of the farthest ordered stage reached.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - "0 - No product view"
+                  - "1 - Product view"
+                  - "2 - Add to cart"
+                  - "3 - Checkout"
+                  - "4 - Purchase"
+
+      - name: funnel_status
+        description: >
+          Indicates whether the session converted or the stage
+          after which it dropped.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Converted
+                  - Dropped after checkout
+                  - Dropped after cart
+                  - Dropped after product view
+                  - No product view
+
+  - name: int_orders
+    description: >
+      One row per ecommerce transaction. Repeated purchase-event
+      records are consolidated using transaction_id, while
+      transaction-level revenue and quality flags are retained.
+
+    columns:
+      - name: transaction_id
+        description: Unique ecommerce transaction identifier.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: order_date
+        description: Calendar date of the earliest purchase event.
+        data_tests:
+          - not_null
+
+      - name: purchased_at
+        description: Timestamp of the earliest purchase event.
+        data_tests:
+          - not_null
+
+      - name: session_id
+        description: Session associated with the earliest purchase event.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('int_sessions')
+                field: session_id
+
+      - name: order_revenue_usd
+        description: Consolidated purchase-event revenue in US dollars.
+        data_tests:
+          - not_null
+
+      - name: order_item_quantity
+        description: Total quantity reported on the purchase event.
+        data_tests:
+          - not_null
+
+      - name: source_purchase_event_count
+        description: >
+          Number of source purchase-event records sharing
+          the transaction ID.
+        data_tests:
+          - not_null
+
+      - name: has_duplicate_purchase_event
+        description: >
+          True when multiple purchase-event records share
+          the transaction ID.
+        data_tests:
+          - not_null
+
+      - name: spans_multiple_sessions
+        description: >
+          True when a transaction ID appears across more
+          than one session.
+        data_tests:
+          - not_null
+
+      - name: has_missing_order_revenue
+        description: >
+          True when all source purchase events have missing revenue.
+        data_tests:
+          - not_null
+        
+  - name: int_order_items
+    description: >
+      One row per product line in the canonical purchase event
+      associated with an ecommerce transaction.
+
+    columns:
+      - name: order_item_id
+        description: Unique identifier for a purchased product line.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: transaction_id
+        description: Transaction to which the item belongs.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_orders')
+                field: transaction_id
+
+      - name: product_key
+        description: >
+          Product grouping key based on item ID, or item name
+          and variant when the item ID is missing.
+        data_tests:
+          - not_null
+
+      - name: item_position
+        description: Position of the item in the purchase items array.
+        data_tests:
+          - not_null
+
+      - name: quantity
+        description: Purchased quantity of the product.
+        data_tests:
+          - not_null
+
+      - name: line_revenue_usd
+        description: >
+          Item revenue in USD, with price multiplied by quantity
+          used as a fallback when necessary.
+        data_tests:
+          - not_null
+
+      - name: used_calculated_line_value
+        description: >
+          True when price multiplied by quantity was used because
+          item revenue was unavailable.
+        data_tests:
+          - not_null
+
+      - name: has_missing_line_value
+        description: >
+          True when neither item revenue nor item price was available.
+        data_tests:
+          - not_null
+
+  - name: int_users
+    description: >
+      One row per anonymous GA4 user. Combines session behavior,
+      transaction activity, purchase timing, revenue, and
+      repeat-purchase classification.
+
+    columns:
+      - name: anonymous_user_key
+        description: Hashed identifier for the anonymous GA4 user.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: user_pseudo_id
+        description: Source GA4 pseudonymous user identifier.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: first_seen_date
+        description: First observed session date for the user.
+        data_tests:
+          - not_null
+
+      - name: last_seen_date
+        description: Last observed session date for the user.
+        data_tests:
+          - not_null
+
+      - name: session_count
+        description: Total sessions associated with the user.
+        data_tests:
+          - not_null
+
+      - name: order_count
+        description: Total deduplicated orders associated with the user.
+        data_tests:
+          - not_null
+
+      - name: lifetime_revenue_usd
+        description: Total transaction revenue associated with the user.
+        data_tests:
+          - not_null
+
+      - name: has_purchased
+        description: True when the user has at least one order.
+        data_tests:
+          - not_null
+
+      - name: is_repeat_purchaser
+        description: True when the user has two or more orders.
+        data_tests:
+          - not_null
+
+      - name: customer_status
+        description: Non-purchaser, one-time purchaser, or repeat purchaser.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Non-purchaser
+                  - One-time purchaser
+                  - Repeat purchaser          

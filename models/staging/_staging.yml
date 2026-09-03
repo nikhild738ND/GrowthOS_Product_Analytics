@@ -1,0 +1,124 @@
+version: 2
+
+models:
+  - name: stg_ga4_events
+    description: >
+      One row per GA4 event from Google's public obfuscated ecommerce
+      sample. Nested event parameters are flattened for downstream
+      session, funnel, customer, and transaction modeling.
+
+    columns:
+      - name: event_date
+        description: Calendar date associated with the GA4 event.
+        data_tests:
+          - not_null
+
+      - name: event_timestamp
+        description: Timestamp at which the event occurred.
+        data_tests:
+          - not_null
+
+      - name: event_name
+        description: Name of the recorded GA4 event.
+        data_tests:
+          - not_null
+
+      - name: user_pseudo_id
+        description: Anonymous GA4 identifier assigned to the user.
+
+      - name: ga_session_id
+        description: GA4 session identifier extracted from event parameters.
+
+      - name: session_id
+        description: >
+          Session identifier created by combining user_pseudo_id
+          and ga_session_id.
+
+      - name: platform
+        description: Platform from which the event originated.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - WEB
+                  - IOS
+                  - ANDROID
+
+      - name: device_category
+        description: Device category such as desktop, mobile, or tablet.
+
+      - name: first_user_source
+        description: Source through which the user was first acquired.
+
+      - name: first_user_medium
+        description: Medium through which the user was first acquired.
+
+      - name: transaction_id
+        description: Ecommerce transaction identifier when available.
+
+      - name: purchase_revenue_usd
+        description: Purchase-event revenue represented in US dollars.
+
+  - name: stg_ga4_items
+    description: >
+      One row per item contained in a GA4 ecommerce event.
+      The repeated items array is flattened to support
+      product, basket, transaction, and merchandising analysis.
+
+    columns:
+      - name: event_item_id
+        description: >
+          Unique identifier for one item position within
+          one GA4 event.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: event_key
+        description: >
+          Derived identifier representing the source GA4 event.
+        data_tests:
+          - not_null
+
+      - name: event_date
+        description: Calendar date associated with the event.
+        data_tests:
+          - not_null
+
+      - name: event_timestamp
+        description: Timestamp at which the event was recorded.
+        data_tests:
+          - not_null
+
+      - name: event_name
+        description: Name of the GA4 ecommerce event.
+        data_tests:
+          - not_null
+
+      - name: item_position
+        description: >
+          One-based position of the item inside the event's
+          items array.
+        data_tests:
+          - not_null
+
+      - name: quantity
+        description: Quantity associated with the item.
+        data_tests:
+          - not_null
+
+      - name: transaction_id
+        description: >
+          Ecommerce transaction identifier when one is present.
+
+      - name: item_id
+        description: Product identifier supplied with the GA4 event.
+
+      - name: item_name
+        description: Product name supplied with the GA4 event.
+
+      - name: item_value_usd
+        description: >
+          Item revenue in USD when available, otherwise
+          item price multiplied by quantity.
+          
